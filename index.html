@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebolusverse - Download Berkas Fidusia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .loader {
+            margin: 30px auto;
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            color: #666;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        .status.success {
+            color: #28a745;
+        }
+
+        .status.error {
+            color: #dc3545;
+        }
+
+        .manual-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .manual-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📁 Nebolusverse System</h2>
+        <div class="loader"></div>
+        <div class="status" id="status">Sedang mengunduh berkas fidusia...</div>
+        <p id="manual-message" style="display: none; color: #666; margin: 10px 0;">
+            Download tidak berjalan? 
+            <a id="manual-link" href="#" class="manual-link">Klik di sini untuk mengunduh manual</a>
+        </p>
+        <div class="footer">Nebolusverse • Secure File Transfer</div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // Konfigurasi
+            const CONFIG = {
+                // GANTI URL INI DENGAN LINK FILE FIDUSIA ANDA
+                fileUrl: 'https://contoh.com/berkas-fidusia.pdf',
+                fileName: 'Berkas_Fidusia_Nebolusverse.pdf',
+                retryDelay: 1000,
+                maxRetries: 2
+            };
+
+            // Cache DOM elements
+            const statusEl = document.getElementById('status');
+            const manualMessage = document.getElementById('manual-message');
+            const manualLink = document.getElementById('manual-link');
+
+            let retryCount = 0;
+
+            function downloadFile(url, filename) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const anchor = document.createElement('a');
+                        anchor.href = url;
+                        anchor.download = filename;
+                        anchor.style.display = 'none';
+                        
+                        // Event listeners untuk deteksi keberhasilan
+                        anchor.addEventListener('click', () => {
+                            setTimeout(resolve, 100);
+                        });
+
+                        anchor.addEventListener('error', (e) => {
+                            reject(new Error('Gagal mengunduh file'));
+                        });
+
+                        document.body.appendChild(anchor);
+                        anchor.click();
+
+                        // Cleanup
+                        setTimeout(() => {
+                            document.body.removeChild(anchor);
+                        }, 200);
+
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }
+
+            function handleDownload() {
+                statusEl.textContent = 'Memulai proses download...';
+                statusEl.className = 'status';
+
+                downloadFile(CONFIG.fileUrl, CONFIG.fileName)
+                    .then(() => {
+                        statusEl.textContent = '✅ Download berhasil dimulai!';
+                        statusEl.className = 'status success';
+                        manualMessage.style.display = 'none';
+                        
+                        // Log untuk monitoring
+                        console.log(`Nebolusverse: Download initiated for ${CONFIG.fileName}`);
+                    })
+                    .catch((error) => {
+                        console.error('Download error:', error);
+                        
+                        if (retryCount < CONFIG.maxRetries) {
+                            retryCount++;
+                            statusEl.textContent = `⚠️ Percobaan ulang ${retryCount}/${CONFIG.maxRetries}...`;
+                            setTimeout(handleDownload, CONFIG.retryDelay);
+                        } else {
+                            statusEl.textContent = '❌ Download gagal';
+                            statusEl.className = 'status error';
+                            
+                            // Tampilkan opsi manual
+                            manualLink.href = CONFIG.fileUrl;
+                            manualMessage.style.display = 'block';
+                        }
+                    });
+            }
+
+            // Set manual link
+            manualLink.href = CONFIG.fileUrl;
+            manualLink.target = '_blank';
+
+            // Start download ketika halaman siap
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', handleDownload);
+            } else {
+                handleDownload();
+            }
+
+            // Tambahkan fallback untuk browser yang memblokir popup
+            window.addEventListener('load', () => {
+                if (!manualMessage.style.display === 'block') {
+                    setTimeout(() => {
+                        if (statusEl.textContent.includes('Sedang mengunduh')) {
+                            manualMessage.style.display = 'block';
+                        }
+                    }, 3000);
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>
